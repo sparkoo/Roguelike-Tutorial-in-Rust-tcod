@@ -4,6 +4,7 @@ use tcod::map::{FovAlgorithm, Map as FovMap};
 use roguelike::{Game, gamemap, PLAYER_ID, SCREEN_HEIGHT, SCREEN_WIDTH};
 use roguelike::ai::ai_take_turn;
 use roguelike::gamemap::{draw_map, MAP_HEIGHT, MAP_WIDTH};
+use roguelike::gui::draw_gui;
 use roguelike::object::{Fighter, Object, player_move_or_attack};
 use crate::PlayerAction::{DidntTakeTurn, Exit, TookTurn};
 
@@ -95,6 +96,8 @@ fn render(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_recompute: b
     }
 
     blit(&tcod.con, (0, 0), (MAP_WIDTH, MAP_HEIGHT), &mut tcod.root, (0, 0), 1.0, 1.0);
+
+    draw_gui(&mut tcod.root, &objects)
 }
 
 fn handle_keys(tcod: &mut Tcod, objects: &mut [Object], game: &Game) -> PlayerAction {

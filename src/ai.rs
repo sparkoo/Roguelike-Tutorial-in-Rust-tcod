@@ -1,5 +1,5 @@
 use tcod::Map;
-use crate::{Game, PLAYER_ID};
+use crate::{Game, mut_two, PLAYER_ID};
 use crate::object::{move_by, Object};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -25,8 +25,8 @@ pub fn ai_take_turn(monster_id: usize, fov_map: &Map, game: &Game, objects: &mut
             let (px, py) = objects[PLAYER_ID].position();
             move_towards(monster_id, px, py, game, objects);
         } else {
-            let monster = &objects[monster_id];
-            println!("The attack from {}", monster.name);
+            let (player, target) = mut_two(monster_id, PLAYER_ID, objects);
+            player.attack(target);
         }
     }
 }

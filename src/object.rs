@@ -1,5 +1,5 @@
 use tcod::{BackgroundFlag, Color, Console};
-use crate::{Game, PLAYER_ID};
+use crate::{Game, mut_two, PLAYER_ID};
 use crate::ai::Ai;
 use crate::gamemap::is_blocked;
 
@@ -58,6 +58,26 @@ impl Object {
         let dy = other.y - self.y;
         ((dx.pow(2) + dy.pow(2)) as f32).sqrt()
     }
+
+    pub fn take_damage(&mut self, damage: i32) {
+        println!("take damage {}", damage);
+        if let Some(fighter) = self.fighter.as_mut() {
+            if damage > 0 {
+                fighter.hp -= damage;
+            }
+        }
+    }
+
+    pub fn attack(&mut self, target: &mut Object) {
+        let damage = self.fighter.map_or(0, |f| f.power) - target.fighter.map_or(0, |f| f.defense);
+
+        if damage > 0 {
+            println!("{} attacks {} for {} hit points.", self.name, target.name, damage);
+            target.take_damage(damage);
+        } else {
+            println!("{} attacks {}, but it has no effect!", self.name, target.name);
+        }
+    }
 }
 
 pub fn move_by(id: usize, dx: i32, dy: i32, game: &Game, objects: &mut [Object]) {
@@ -75,7 +95,8 @@ pub fn player_move_or_attack(dx: i32, dy: i32, game: &Game, objects: &mut [Objec
 
     match target_id {
         Some(target_id) => {
-            println!("Attacking {}", objects[target_id].name);
+            let (player, target) = mut_two(PLAYER_ID, target_id, objects);
+            player.attack(target);
         }
         None => {
             move_by(PLAYER_ID, dx, dy, game, objects);
