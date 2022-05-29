@@ -1,7 +1,7 @@
 use std::cmp;
 use rand::Rng;
-use tcod::{BackgroundFlag, Color, Console, Map};
-use crate::Game;
+use tcod::{BackgroundFlag, Color, colors, Console, Map};
+use crate::{Game, PLAYER_ID};
 use crate::object::Object;
 
 pub const MAP_WIDTH: i32 = 80;
@@ -17,6 +17,7 @@ const COLOR_LIGHT_GROUND: Color = Color { r: 200, g: 180, b: 50 };
 const ROOM_MAX_SIZE: i32 = 10;
 const ROOM_MIN_SIZE: i32 = 6;
 const MAX_ROOMS: i32 = 30;
+const MAX_ROOM_MONSTERS: i32 = 3;
 
 pub type GameMap = Vec<Vec<Tile>>;
 
@@ -27,7 +28,7 @@ pub struct Tile {
     pub explored: bool,
 }
 
-pub fn make_map(player: &mut Object) -> GameMap {
+pub fn make_map(objects: &mut Vec<Object>) -> GameMap {
     let mut game_map = vec![vec![Tile::wall(); MAP_HEIGHT as usize]; MAP_WIDTH as usize];
 
     let mut rooms = vec![];
@@ -43,10 +44,11 @@ pub fn make_map(player: &mut Object) -> GameMap {
             .any(|other_room| new_room.intersects_with(other_room));
         if !failed {
             create_room(new_room, &mut game_map);
+            place_objects(new_room, &game_map, objects);
 
             let (new_x, new_y) = new_room.center();
             if rooms.is_empty() {
-                player.move_to(new_x, new_y)
+                objects[PLAYER_ID].move_to(new_x, new_y)
             } else {
                 let (prev_x, prev_y) = rooms[rooms.len() - 1].center();
                 if rand::random() {
@@ -84,6 +86,24 @@ fn create_v_tunnel(y1: i32, y2: i32, x: i32, map: &mut GameMap) {
     }
 }
 
+fn place_objects(room: RectRoom, map: &GameMap, objects: &mut Vec<Object>) {
+    let num_monsters = rand::thread_rng().gen_range(0..MAX_ROOM_MONSTERS + 1);
+
+    for _ in 0..num_monsters {
+        let x = rand::thread_rng().gen_range(room.x1 + 1..room.x2);
+        let y = rand::thread_rng().gen_range(room.y1 + 1..room.y2);
+        if !is_blocked(x, y, map, objects) {
+            let mut monster = if rand::thread_rng().gen_ratio(4, 5) {
+                Object::new(x, y, 'o', "ork", colors::DESATURATED_GREEN, true)
+            } else {
+                Object::new(x, y, 'T', "troll", colors::DARKER_GREEN, true)
+            };
+            monster.alive = true;
+            objects.push(monster)
+        }
+    }
+}
+
 pub fn draw_map(game: &mut Game, con: &mut dyn Console, fov_map: &Map) {
     for y in 0..MAP_HEIGHT {
         for x in 0..MAP_WIDTH {
@@ -106,6 +126,14 @@ pub fn draw_map(game: &mut Game, con: &mut dyn Console, fov_map: &Map) {
             }
         }
     }
+}
+
+pub fn is_blocked(x: i32, y: i32, map: &GameMap, objects: &[Object]) -> bool {
+    if map[x as usize][y as usize].blocked {
+        return true;
+    }
+
+    objects.iter().any(|o| o.blocks && o.position() == (x, y))
 }
 
 impl Tile {
