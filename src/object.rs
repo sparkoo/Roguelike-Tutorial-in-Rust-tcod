@@ -1,4 +1,5 @@
 use tcod::{BackgroundFlag, Color, Console};
+use tcod::colors::DARK_RED;
 use crate::{Game, mut_two, PLAYER_ID};
 use crate::ai::Ai;
 use crate::gamemap::is_blocked;
@@ -22,6 +23,41 @@ pub struct Fighter {
     pub hp: i32,
     pub defense: i32,
     pub power: i32,
+    pub on_death: DeathCallback,
+}
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum DeathCallback {
+    Player,
+    Monster,
+}
+
+impl DeathCallback {
+    fn callback(self, object: &mut Object) {
+        use DeathCallback::*;
+        let callback: fn(&mut Object) = match self {
+            Player => player_death,
+            Monster => monster_death,
+        };
+        callback(object);
+    }
+}
+
+fn player_death(player: &mut Object) {
+    println!("You died!");
+
+    player.char = '%';
+    player.color = DARK_RED;
+}
+
+fn monster_death(monster: &mut Object) {
+    println!("{} is dead!", monster.name);
+    monster.char = '%';
+    monster.color = DARK_RED;
+    monster.blocks = false;
+    monster.fighter = None;
+    monster.ai = None;
+    monster.name = format!("remains of {}", monster.name);
 }
 
 impl Object {
@@ -66,6 +102,13 @@ impl Object {
                 fighter.hp -= damage;
             }
         }
+
+        if let Some(fighter) = self.fighter {
+            if fighter.hp <= 0 {
+                self.alive = false;
+                fighter.on_death.callback(self);
+            }
+        }
     }
 
     pub fn attack(&mut self, target: &mut Object) {
@@ -91,7 +134,7 @@ pub fn player_move_or_attack(dx: i32, dy: i32, game: &Game, objects: &mut [Objec
     let x = objects[PLAYER_ID].x + dx;
     let y = objects[PLAYER_ID].y + dy;
 
-    let target_id = objects.iter().position(|o| o.position() == (x, y));
+    let target_id = objects.iter().position(|o| o.fighter.is_some() && o.position() == (x, y));
 
     match target_id {
         Some(target_id) => {

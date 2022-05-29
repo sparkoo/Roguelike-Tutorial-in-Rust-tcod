@@ -1,9 +1,10 @@
 use std::cmp;
 use rand::Rng;
 use tcod::{BackgroundFlag, Color, colors, Console, Map};
+use DeathCallback::Monster;
 use crate::{Game, PLAYER_ID};
 use crate::ai::Ai;
-use crate::object::{Fighter, Object};
+use crate::object::{DeathCallback, Fighter, Object};
 
 pub const MAP_WIDTH: i32 = 80;
 pub const MAP_HEIGHT: i32 = 45;
@@ -96,12 +97,12 @@ fn place_objects(room: RectRoom, map: &GameMap, objects: &mut Vec<Object>) {
         if !is_blocked(x, y, map, objects) {
             let mut monster = if rand::thread_rng().gen_ratio(4, 5) {
                 let mut ork = Object::new(x, y, 'o', "ork", colors::DESATURATED_GREEN, true);
-                ork.fighter = Some(Fighter { max_hp: 10, hp: 10, defense: 0, power: 3 });
+                ork.fighter = Some(Fighter { max_hp: 10, hp: 10, defense: 0, power: 3, on_death: Monster });
                 ork.ai = Some(Ai::Basic);
                 ork
             } else {
                 let mut troll = Object::new(x, y, 'T', "troll", colors::DARKER_GREEN, true);
-                troll.fighter = Some(Fighter { max_hp: 16, hp: 16, defense: 1, power: 4 });
+                troll.fighter = Some(Fighter { max_hp: 16, hp: 16, defense: 1, power: 4, on_death: Monster });
                 troll.ai = Some(Ai::Basic);
                 troll
             };

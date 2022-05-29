@@ -6,6 +6,7 @@ use roguelike::ai::ai_take_turn;
 use roguelike::gamemap::{draw_map, MAP_HEIGHT, MAP_WIDTH};
 use roguelike::gui::draw_gui;
 use roguelike::object::{Fighter, Object, player_move_or_attack};
+use roguelike::object::DeathCallback::Player;
 use crate::PlayerAction::{DidntTakeTurn, Exit, TookTurn};
 
 const FOV_ALGO: FovAlgorithm = FovAlgorithm::Basic;
@@ -44,7 +45,7 @@ fn main() {
 
     let mut player = Object::new(25, 23, '@', "Franta", WHITE, false);
     player.alive = true;
-    player.fighter = Some(Fighter { max_hp: 30, hp: 30, defense: 2, power: 5 });
+    player.fighter = Some(Fighter { max_hp: 30, hp: 30, defense: 2, power: 5, on_death: Player });
 
     let mut objects = vec![player];
     let mut game = Game {
