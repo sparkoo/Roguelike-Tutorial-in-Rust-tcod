@@ -1,6 +1,6 @@
 use std::cmp;
 use rand::Rng;
-use tcod::{BackgroundFlag, Color, Console};
+use tcod::{BackgroundFlag, Color, Console, Map};
 use crate::Game;
 use crate::object::Object;
 
@@ -8,7 +8,11 @@ pub const MAP_WIDTH: i32 = 80;
 pub const MAP_HEIGHT: i32 = 45;
 
 const COLOR_DARK_WALL: Color = Color { r: 0, g: 0, b: 100 };
+const COLOR_LIGHT_WALL: Color = Color { r: 130, g: 110, b: 50 };
+
 const COLOR_DARK_GROUND: Color = Color { r: 50, g: 50, b: 150 };
+const COLOR_LIGHT_GROUND: Color = Color { r: 200, g: 180, b: 50 };
+
 
 const ROOM_MAX_SIZE: i32 = 10;
 const ROOM_MIN_SIZE: i32 = 6;
@@ -20,6 +24,7 @@ pub type GameMap = Vec<Vec<Tile>>;
 pub struct Tile {
     pub blocked: bool,
     pub block_sight: bool,
+    pub explored: bool,
 }
 
 pub fn make_map(player: &mut Object) -> GameMap {
@@ -79,13 +84,25 @@ fn create_v_tunnel(y1: i32, y2: i32, x: i32, map: &mut GameMap) {
     }
 }
 
-pub fn draw_map(game: &Game, con: &mut dyn Console) {
+pub fn draw_map(game: &mut Game, con: &mut dyn Console, fov_map: &Map) {
     for y in 0..MAP_HEIGHT {
         for x in 0..MAP_WIDTH {
-            if game.map[x as usize][y as usize].block_sight {
-                con.set_char_background(x, y, COLOR_DARK_WALL, BackgroundFlag::Set)
-            } else {
-                con.set_char_background(x, y, COLOR_DARK_GROUND, BackgroundFlag::Set);
+            let visible = fov_map.is_in_fov(x, y);
+            let wall = game.map[x as usize][y as usize].block_sight;
+            let color = match (visible, wall) {
+                (false, true) => COLOR_DARK_WALL,
+                (false, false) => COLOR_DARK_GROUND,
+                (true, true) => COLOR_LIGHT_WALL,
+                (true, false) => COLOR_LIGHT_GROUND,
+            };
+
+            let explored = &mut game.map[x as usize][y as usize].explored;
+            if visible {
+                *explored = true;
+            }
+
+            if *explored {
+                con.set_char_background(x, y, color, BackgroundFlag::Set);
             }
         }
     }
@@ -93,11 +110,11 @@ pub fn draw_map(game: &Game, con: &mut dyn Console) {
 
 impl Tile {
     pub fn empty() -> Self {
-        Self { blocked: false, block_sight: false }
+        Self { blocked: false, block_sight: false, explored: false }
     }
 
     pub fn wall() -> Self {
-        Self { blocked: true, block_sight: true }
+        Self { blocked: true, block_sight: true, explored: false }
     }
 }
 

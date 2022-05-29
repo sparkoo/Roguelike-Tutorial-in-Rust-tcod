@@ -35,4 +35,8 @@ impl Object {
         con.set_default_foreground(self.color);
         con.put_char(self.x, self.y, self.char, BackgroundFlag::None);
     }
+
+    pub fn position(&self) -> (i32, i32) {
+        (self.x, self.y)
+    }
 }
