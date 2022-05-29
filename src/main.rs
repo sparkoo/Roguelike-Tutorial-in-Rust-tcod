@@ -43,7 +43,7 @@ fn main() {
 
     tcod::system::set_fps(LIMIT_FPS);
 
-    let mut player = Object::new(25, 23, '@', "Franta", WHITE, false);
+    let mut player = Object::new(25, 23, '@', "Franta", WHITE, true);
     player.alive = true;
     player.fighter = Some(Fighter { max_hp: 30, hp: 30, defense: 2, power: 5, on_death: Player });
 
@@ -81,11 +81,13 @@ fn main() {
 fn render(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_recompute: bool) {
     tcod.con.clear();
 
-    for o in objects {
-        let (ox, oy) = o.position();
-        if tcod.fov.is_in_fov(ox, oy) {
-            o.draw(&mut tcod.con);
-        }
+
+    let mut to_draw: Vec<_> = objects.iter()
+        .filter(|o| tcod.fov.is_in_fov(o.position().0, o.position().1))
+        .collect();
+    to_draw.sort_by(|o1, o2| { o1.blocks.cmp(&o2.blocks) });
+    for o in &to_draw {
+        o.draw(&mut tcod.con);
     }
 
     draw_map(game, &mut tcod.con, &tcod.fov);
