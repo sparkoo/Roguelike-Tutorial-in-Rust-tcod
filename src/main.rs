@@ -2,8 +2,9 @@ use tcod::colors::*;
 use tcod::console::*;
 use tcod::map::{FovAlgorithm, Map as FovMap};
 use roguelike::{Game, gamemap, PLAYER_ID, SCREEN_HEIGHT, SCREEN_WIDTH};
+use roguelike::ai::ai_take_turn;
 use roguelike::gamemap::{draw_map, MAP_HEIGHT, MAP_WIDTH};
-use roguelike::object::{move_by, Object, player_move_or_attack};
+use roguelike::object::{Fighter, Object, player_move_or_attack};
 use crate::PlayerAction::{DidntTakeTurn, Exit, TookTurn};
 
 const FOV_ALGO: FovAlgorithm = FovAlgorithm::Basic;
@@ -42,6 +43,7 @@ fn main() {
 
     let mut player = Object::new(25, 23, '@', "Franta", WHITE, false);
     player.alive = true;
+    player.fighter = Some(Fighter { max_hp: 30, hp: 30, defense: 2, power: 5 });
 
     let mut objects = vec![player];
     let mut game = Game {
@@ -62,10 +64,10 @@ fn main() {
         previous_player_position = objects[PLAYER_ID].position();
         let player_action = handle_keys(&mut tcod, &mut objects, &game);
 
-        if player_action == TookTurn {
-            for o in &objects {
-                if (o as *const _) != (&objects[PLAYER_ID] as *const _) {
-                    println!("The {} growls!", o.name);
+        if objects[PLAYER_ID].alive && player_action == TookTurn {
+            for id in 0..objects.len() {
+                if objects[id].ai.is_some() {
+                    ai_take_turn(id, &tcod.fov, &game, &mut objects);
                 }
             }
         }

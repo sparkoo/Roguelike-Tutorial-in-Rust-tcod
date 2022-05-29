@@ -1,5 +1,6 @@
 use tcod::{BackgroundFlag, Color, Console};
 use crate::{Game, PLAYER_ID};
+use crate::ai::Ai;
 use crate::gamemap::is_blocked;
 
 #[derive(Debug)]
@@ -11,6 +12,16 @@ pub struct Object {
     pub name: String,
     pub blocks: bool,
     pub alive: bool,
+    pub fighter: Option<Fighter>,
+    pub ai: Option<Ai>,
+}
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub struct Fighter {
+    pub max_hp: i32,
+    pub hp: i32,
+    pub defense: i32,
+    pub power: i32,
 }
 
 impl Object {
@@ -23,6 +34,8 @@ impl Object {
             name: name.into(),
             blocks,
             alive: false,
+            fighter: None,
+            ai: None,
         }
     }
 
@@ -38,6 +51,12 @@ impl Object {
 
     pub fn position(&self) -> (i32, i32) {
         (self.x, self.y)
+    }
+
+    pub fn distance_to(&self, other: &Object) -> f32 {
+        let dx = other.x - self.x;
+        let dy = other.y - self.y;
+        ((dx.pow(2) + dy.pow(2)) as f32).sqrt()
     }
 }
 
