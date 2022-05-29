@@ -1,4 +1,5 @@
 use tcod::{BackgroundFlag, Color, Console};
+use crate::Game;
 
 #[derive(Debug)]
 pub struct Object {
@@ -18,9 +19,11 @@ impl Object {
         }
     }
 
-    pub fn move_by(&mut self, dx: i32, dy: i32) {
-        self.x += dx;
-        self.y += dy;
+    pub fn move_by(&mut self, dx: i32, dy: i32, game: &Game) {
+        if !game.map[(self.x + dx) as usize][(self.y + dy) as usize].blocked {
+            self.x += dx;
+            self.y += dy;
+        }
     }
 
     pub fn draw(&self, con: &mut dyn Console) {
