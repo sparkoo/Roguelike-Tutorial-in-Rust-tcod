@@ -4,7 +4,7 @@ use tcod::map::{FovAlgorithm, Map as FovMap};
 use roguelike::{Game, gamemap, PLAYER_ID, SCREEN_HEIGHT, SCREEN_WIDTH};
 use roguelike::ai::ai_take_turn;
 use roguelike::gamemap::{draw_map, MAP_HEIGHT, MAP_WIDTH};
-use roguelike::gui::draw_gui;
+use roguelike::gui::{draw_gui, PANEL_HEIGHT, PANEL_Y};
 use roguelike::object::{Fighter, Object, player_move_or_attack};
 use roguelike::object::DeathCallback::Player;
 use crate::PlayerAction::{DidntTakeTurn, Exit, TookTurn};
@@ -18,6 +18,7 @@ const LIMIT_FPS: i32 = 20;
 struct Tcod {
     root: Root,
     con: Offscreen,
+    gui: Offscreen,
     fov: FovMap,
 }
 
@@ -38,6 +39,7 @@ fn main() {
     let mut tcod = Tcod {
         root,
         con: Offscreen::new(MAP_WIDTH, MAP_HEIGHT),
+        gui: Offscreen::new(SCREEN_WIDTH, PANEL_HEIGHT),
         fov: FovMap::new(MAP_WIDTH, MAP_HEIGHT),
     };
 
@@ -81,7 +83,6 @@ fn main() {
 fn render(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_recompute: bool) {
     tcod.con.clear();
 
-
     let mut to_draw: Vec<_> = objects.iter()
         .filter(|o| tcod.fov.is_in_fov(o.position().0, o.position().1))
         .collect();
@@ -100,7 +101,8 @@ fn render(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_recompute: b
 
     blit(&tcod.con, (0, 0), (MAP_WIDTH, MAP_HEIGHT), &mut tcod.root, (0, 0), 1.0, 1.0);
 
-    draw_gui(&mut tcod.root, &objects)
+    draw_gui(&mut tcod.gui, &objects);
+    blit(&mut tcod.gui, (0, 0), (SCREEN_WIDTH, PANEL_HEIGHT), &mut tcod.root, (0, PANEL_Y), 1.0, 1.0);
 }
 
 fn handle_keys(tcod: &mut Tcod, objects: &mut [Object], game: &Game) -> PlayerAction {

@@ -7,7 +7,7 @@ use crate::ai::Ai;
 use crate::object::{DeathCallback, Fighter, Object};
 
 pub const MAP_WIDTH: i32 = 80;
-pub const MAP_HEIGHT: i32 = 45;
+pub const MAP_HEIGHT: i32 = 43;
 
 const COLOR_DARK_WALL: Color = Color { r: 0, g: 0, b: 100 };
 const COLOR_LIGHT_WALL: Color = Color { r: 130, g: 110, b: 50 };
