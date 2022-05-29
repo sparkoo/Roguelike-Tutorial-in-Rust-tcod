@@ -3,7 +3,8 @@ use tcod::console::*;
 use tcod::map::{FovAlgorithm, Map as FovMap};
 use roguelike::{Game, gamemap, PLAYER_ID, SCREEN_HEIGHT, SCREEN_WIDTH};
 use roguelike::gamemap::{draw_map, MAP_HEIGHT, MAP_WIDTH};
-use roguelike::object::{move_by, Object};
+use roguelike::object::{move_by, Object, player_move_or_attack};
+use crate::PlayerAction::{DidntTakeTurn, Exit, TookTurn};
 
 const FOV_ALGO: FovAlgorithm = FovAlgorithm::Basic;
 const FOV_LIGHT_WALLS: bool = true;
@@ -15,6 +16,13 @@ struct Tcod {
     root: Root,
     con: Offscreen,
     fov: FovMap,
+}
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+enum PlayerAction {
+    TookTurn,
+    DidntTakeTurn,
+    Exit,
 }
 
 fn main() {
@@ -52,9 +60,17 @@ fn main() {
         tcod.root.flush();
 
         previous_player_position = objects[PLAYER_ID].position();
-        let exit = handle_keys(&mut tcod, &mut objects, &game);
+        let player_action = handle_keys(&mut tcod, &mut objects, &game);
 
-        if exit { break; }
+        if player_action == TookTurn {
+            for o in &objects {
+                if (o as *const _) != (&objects[PLAYER_ID] as *const _) {
+                    println!("The {} growls!", o.name);
+                }
+            }
+        }
+
+        if player_action == Exit { break; }
     }
 }
 
@@ -79,19 +95,33 @@ fn render(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_recompute: b
     blit(&tcod.con, (0, 0), (MAP_WIDTH, MAP_HEIGHT), &mut tcod.root, (0, 0), 1.0, 1.0);
 }
 
-fn handle_keys(tcod: &mut Tcod, objects: &mut [Object], game: &Game) -> bool {
+fn handle_keys(tcod: &mut Tcod, objects: &mut [Object], game: &Game) -> PlayerAction {
     use tcod::input::Key;
     use tcod::input::KeyCode::*;
     let key = tcod.root.wait_for_keypress(true);
-    match key {
-        Key { code: Up, .. } => move_by(PLAYER_ID, 0, -1, game, objects),
-        Key { code: Down, .. } => move_by(PLAYER_ID,0, 1, game, objects),
-        Key { code: Left, .. } => move_by(PLAYER_ID,-1, 0, game, objects),
-        Key { code: Right, .. } => move_by(PLAYER_ID,1, 0, game, objects),
-        Key { code: Enter, alt: true, .. } => tcod.root.set_fullscreen(!tcod.root.is_fullscreen()),
-        Key { code: Escape, .. } => return true,
-        _ => {}
-    }
+    match (key, key.text(), objects[PLAYER_ID].alive) {
+        (Key { code: Up, .. }, _, true) => {
+            player_move_or_attack(0, -1, game, objects);
+            TookTurn
+        }
+        (Key { code: Down, .. }, _, true) => {
+            player_move_or_attack(0, 1, game, objects);
+            TookTurn
+        }
+        (Key { code: Left, .. }, _, true) => {
+            player_move_or_attack(-1, 0, game, objects);
+            TookTurn
+        }
+        (Key { code: Right, .. }, _, true) => {
+            player_move_or_attack(1, 0, game, objects);
+            TookTurn
+        }
 
-    false
+        (Key { code: Enter, alt: true, .. }, _, _) => {
+            tcod.root.set_fullscreen(!tcod.root.is_fullscreen());
+            DidntTakeTurn
+        }
+        (Key { code: Escape, .. }, _, _) => Exit,
+        _ => DidntTakeTurn
+    }
 }
