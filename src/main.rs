@@ -24,11 +24,11 @@ fn main() {
 
     tcod::system::set_fps(LIMIT_FPS);
 
+    let mut player = Object::new(25, 23, '@', WHITE);
     let game = Game {
-        map: gamemap::make_map(),
+        map: gamemap::make_map(&mut player),
     };
 
-    let player = Object::new(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, '@', WHITE);
     let npc = Object::new(3, 3, '#', YELLOW);
 
     let mut objects = [player, npc];
