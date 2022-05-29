@@ -1,15 +1,25 @@
 use tcod::colors::*;
 use tcod::console::*;
-use roguelike::player::Object;
+use roguelike::map::GameMap;
+use roguelike::object::Object;
 
 const SCREEN_WIDTH: i32 = 80;
 const SCREEN_HEIGHT: i32 = 50;
+const MAP_WIDTH: i32 = SCREEN_WIDTH;
+const MAP_HEIGHT: i32 = SCREEN_HEIGHT - 5;
+
+const COLOR_DARK_WALL: Color = Color { r: 0, g: 0, b: 100 };
+const COLOR_DARK_GROUND: Color = Color { r: 50, g: 50, b: 150 };
 
 const LIMIT_FPS: i32 = 20;
 
 struct Tcod {
     root: Root,
     con: Offscreen,
+}
+
+struct Game {
+    map: GameMap,
 }
 
 fn main() {

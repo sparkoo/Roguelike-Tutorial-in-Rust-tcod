@@ -1,1 +1,2 @@
-pub mod player;
+pub mod object;
+pub mod map;

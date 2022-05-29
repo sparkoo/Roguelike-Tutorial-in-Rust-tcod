@@ -1,5 +1,6 @@
 use tcod::{BackgroundFlag, Color, Console};
 
+#[derive(Debug)]
 pub struct Object {
     x: i32,
     y: i32,
