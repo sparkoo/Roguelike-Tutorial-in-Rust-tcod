@@ -1,5 +1,6 @@
 use tcod::colors::*;
 use tcod::console::*;
+use tcod::input::{self, Event, Key, Mouse};
 use tcod::map::{FovAlgorithm, Map as FovMap};
 use roguelike::{Game, gamemap, PLAYER_ID, SCREEN_HEIGHT, SCREEN_WIDTH};
 use roguelike::ai::ai_take_turn;
@@ -20,6 +21,8 @@ struct Tcod {
     con: Offscreen,
     gui: Offscreen,
     fov: FovMap,
+    key: Key,
+    mouse: Mouse,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -41,6 +44,8 @@ fn main() {
         con: Offscreen::new(MAP_WIDTH, MAP_HEIGHT),
         gui: Offscreen::new(SCREEN_WIDTH, PANEL_HEIGHT),
         fov: FovMap::new(MAP_WIDTH, MAP_HEIGHT),
+        key: Default::default(),
+        mouse: Default::default()
     };
 
     tcod::system::set_fps(LIMIT_FPS);
@@ -64,6 +69,12 @@ fn main() {
 
     let mut previous_player_position = (-1, -1);
     while !tcod.root.window_closed() {
+        match input::check_for_event(input::MOUSE | input::KEY_PRESS) {
+            Some((_, Event::Mouse(m))) => tcod.mouse = m,
+            Some((_, Event::Key(k))) => tcod.key = k,
+            _ => tcod.key = Default::default(),
+        }
+
         render(&mut tcod, &mut game, &objects, previous_player_position != objects[PLAYER_ID].position());
         tcod.root.flush();
 
@@ -103,15 +114,13 @@ fn render(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_recompute: b
 
     blit(&tcod.con, (0, 0), (MAP_WIDTH, MAP_HEIGHT), &mut tcod.root, (0, 0), 1.0, 1.0);
 
-    draw_gui(&mut tcod.gui, &objects, &game.messages);
+    draw_gui(&mut tcod.gui, &objects, &game.messages, &tcod.mouse, &tcod.fov);
     blit(&mut tcod.gui, (0, 0), (SCREEN_WIDTH, PANEL_HEIGHT), &mut tcod.root, (0, PANEL_Y), 1.0, 1.0);
 }
 
 fn handle_keys(tcod: &mut Tcod, objects: &mut [Object], game: &mut Game) -> PlayerAction {
-    use tcod::input::Key;
     use tcod::input::KeyCode::*;
-    let key = tcod.root.wait_for_keypress(true);
-    match (key, key.text(), objects[PLAYER_ID].alive) {
+    match (tcod.key, tcod.key.text(), objects[PLAYER_ID].alive) {
         (Key { code: Up, .. }, _, true) => {
             player_move_or_attack(0, -1, game, objects);
             TookTurn

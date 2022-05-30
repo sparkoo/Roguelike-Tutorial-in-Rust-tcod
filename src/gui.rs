@@ -1,6 +1,8 @@
 use tcod::{BackgroundFlag, Color, Console, TextAlignment};
-use tcod::colors::{BLACK, DARKER_RED, LIGHT_RED, WHITE};
+use tcod::colors::{BLACK, DARKER_RED, LIGHT_GREEN, LIGHT_GREY, LIGHT_RED, WHITE};
 use tcod::console::Offscreen;
+use tcod::input::Mouse;
+use tcod::map::Map as FovMap;
 use crate::{PLAYER_ID, SCREEN_HEIGHT, SCREEN_WIDTH};
 use crate::object::Object;
 
@@ -30,7 +32,7 @@ impl Messages {
     }
 }
 
-pub fn draw_gui(panel: &mut Offscreen, objects: &[Object], messages: &Messages) {
+pub fn draw_gui(panel: &mut Offscreen, objects: &[Object], messages: &Messages, mouse: &Mouse, fov: &FovMap) {
     panel.set_default_background(BLACK);
     panel.clear();
 
@@ -40,6 +42,8 @@ pub fn draw_gui(panel: &mut Offscreen, objects: &[Object], messages: &Messages) 
     render_bar(panel, 1, 1, BAR_WIDTH, "HP", hp, max_hp, LIGHT_RED, DARKER_RED);
 
     render_messages(panel, messages);
+
+    render_mouse(panel, mouse, objects, fov);
 }
 
 fn render_bar(panel: &mut Offscreen, x: i32, y: i32, total_width: i32, name: &str, value: i32, max: i32, bar_color: Color, back_color: Color) {
@@ -66,4 +70,20 @@ fn render_messages(panel: &mut Offscreen, messages: &Messages) {
         panel.set_default_foreground(color);
         panel.print_rect(MSG_X, y, MSG_WIDTH, 0, msg);
     }
+}
+
+fn render_mouse(panel: &mut Offscreen, mouse: &Mouse, objects: &[Object], fov: &FovMap) {
+    panel.set_default_foreground(LIGHT_GREY);
+    panel.print_ex(1, 0, BackgroundFlag::None, TextAlignment::Left, get_names_under_mouse(mouse, objects, fov));
+}
+
+fn get_names_under_mouse(mouse: &Mouse, objects: &[Object], fov: &FovMap) -> String {
+    let (x, y) = (mouse.cx as i32, mouse.cy as i32);
+
+    let names = objects.iter()
+        .filter(|o| o.position() == (x, y) && fov.is_in_fov(o.position().0, o.position().1))
+        .map(|o| o.name.clone())
+        .collect::<Vec<_>>();
+
+    names.join(", ")
 }
