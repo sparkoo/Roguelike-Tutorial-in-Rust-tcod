@@ -1,5 +1,5 @@
 use tcod::{BackgroundFlag, Color, Console, TextAlignment};
-use tcod::colors::{BLACK, DARKER_RED, LIGHT_GREEN, LIGHT_GREY, LIGHT_RED, WHITE};
+use tcod::colors::{BLACK, DARKER_RED, LIGHT_GREY, LIGHT_RED, WHITE};
 use tcod::console::Offscreen;
 use tcod::input::Mouse;
 use tcod::map::Map as FovMap;
