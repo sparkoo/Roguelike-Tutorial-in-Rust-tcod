@@ -4,7 +4,7 @@ use tcod::map::{FovAlgorithm, Map as FovMap};
 use roguelike::{Game, gamemap, PLAYER_ID, SCREEN_HEIGHT, SCREEN_WIDTH};
 use roguelike::ai::ai_take_turn;
 use roguelike::gamemap::{draw_map, MAP_HEIGHT, MAP_WIDTH};
-use roguelike::gui::{draw_gui, PANEL_HEIGHT, PANEL_Y};
+use roguelike::gui::{draw_gui, Messages, PANEL_HEIGHT, PANEL_Y};
 use roguelike::object::{Fighter, Object, player_move_or_attack};
 use roguelike::object::DeathCallback::Player;
 use crate::PlayerAction::{DidntTakeTurn, Exit, TookTurn};
@@ -52,7 +52,9 @@ fn main() {
     let mut objects = vec![player];
     let mut game = Game {
         map: gamemap::make_map(&mut objects),
+        messages: Messages::new(),
     };
+    game.messages.add("Welcome stranger!", RED);
 
     for y in 0..MAP_HEIGHT {
         for x in 0..MAP_WIDTH {
@@ -66,12 +68,12 @@ fn main() {
         tcod.root.flush();
 
         previous_player_position = objects[PLAYER_ID].position();
-        let player_action = handle_keys(&mut tcod, &mut objects, &game);
+        let player_action = handle_keys(&mut tcod, &mut objects, &mut game);
 
         if objects[PLAYER_ID].alive && player_action == TookTurn {
             for id in 0..objects.len() {
                 if objects[id].ai.is_some() {
-                    ai_take_turn(id, &tcod.fov, &game, &mut objects);
+                    ai_take_turn(id, &tcod.fov, &mut game, &mut objects);
                 }
             }
         }
@@ -101,11 +103,11 @@ fn render(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_recompute: b
 
     blit(&tcod.con, (0, 0), (MAP_WIDTH, MAP_HEIGHT), &mut tcod.root, (0, 0), 1.0, 1.0);
 
-    draw_gui(&mut tcod.gui, &objects);
+    draw_gui(&mut tcod.gui, &objects, &game.messages);
     blit(&mut tcod.gui, (0, 0), (SCREEN_WIDTH, PANEL_HEIGHT), &mut tcod.root, (0, PANEL_Y), 1.0, 1.0);
 }
 
-fn handle_keys(tcod: &mut Tcod, objects: &mut [Object], game: &Game) -> PlayerAction {
+fn handle_keys(tcod: &mut Tcod, objects: &mut [Object], game: &mut Game) -> PlayerAction {
     use tcod::input::Key;
     use tcod::input::KeyCode::*;
     let key = tcod.root.wait_for_keypress(true);

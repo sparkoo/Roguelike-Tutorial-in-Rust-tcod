@@ -18,7 +18,7 @@ fn move_towards(id: usize, target_x: i32, target_y: i32, game: &Game, objects: &
     move_by(id, dx, dy, game, objects);
 }
 
-pub fn ai_take_turn(monster_id: usize, fov_map: &Map, game: &Game, objects: &mut [Object]) {
+pub fn ai_take_turn(monster_id: usize, fov_map: &Map, game: &mut Game, objects: &mut [Object]) {
     let (monster_x, monster_y) = objects[monster_id].position();
     if fov_map.is_in_fov(monster_x, monster_y) {
         if objects[monster_id].distance_to(&objects[PLAYER_ID]) >= 2.0 {
@@ -26,7 +26,7 @@ pub fn ai_take_turn(monster_id: usize, fov_map: &Map, game: &Game, objects: &mut
             move_towards(monster_id, px, py, game, objects);
         } else {
             let (player, target) = mut_two(monster_id, PLAYER_ID, objects);
-            player.attack(target);
+            player.attack(target, game);
         }
     }
 }

@@ -1,5 +1,6 @@
 use std::cmp;
 use crate::gamemap::GameMap;
+use crate::gui::Messages;
 
 pub mod object;
 pub mod gamemap;
@@ -13,6 +14,7 @@ pub const PLAYER_ID: usize = 0;
 
 pub struct Game {
     pub map: GameMap,
+    pub messages: Messages,
 }
 
 pub fn mut_two<T>(first_index: usize, second_index: usize, items: &mut [T]) -> (&mut T, &mut T) {
