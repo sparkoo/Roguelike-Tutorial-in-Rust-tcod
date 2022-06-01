@@ -3,6 +3,7 @@ use tcod::colors::{DARK_RED, ORANGE, RED, WHITE};
 use crate::{Game, mut_two, PLAYER_ID};
 use crate::ai::Ai;
 use crate::gamemap::is_blocked;
+use crate::inventory::Item;
 
 #[derive(Debug)]
 pub struct Object {
@@ -15,6 +16,7 @@ pub struct Object {
     pub alive: bool,
     pub fighter: Option<Fighter>,
     pub ai: Option<Ai>,
+    pub item: Option<Item>,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -72,6 +74,7 @@ impl Object {
             alive: false,
             fighter: None,
             ai: None,
+            item: None,
         }
     }
 

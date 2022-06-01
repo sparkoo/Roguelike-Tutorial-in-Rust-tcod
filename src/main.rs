@@ -6,6 +6,7 @@ use roguelike::{Game, gamemap, PLAYER_ID, SCREEN_HEIGHT, SCREEN_WIDTH};
 use roguelike::ai::ai_take_turn;
 use roguelike::gamemap::{draw_map, MAP_HEIGHT, MAP_WIDTH};
 use roguelike::gui::{draw_gui, Messages, PANEL_HEIGHT, PANEL_Y};
+use roguelike::inventory::pick_item_up;
 use roguelike::object::{Fighter, Object, player_move_or_attack};
 use roguelike::object::DeathCallback::Player;
 use crate::PlayerAction::{DidntTakeTurn, Exit, TookTurn};
@@ -45,7 +46,7 @@ fn main() {
         gui: Offscreen::new(SCREEN_WIDTH, PANEL_HEIGHT),
         fov: FovMap::new(MAP_WIDTH, MAP_HEIGHT),
         key: Default::default(),
-        mouse: Default::default()
+        mouse: Default::default(),
     };
 
     tcod::system::set_fps(LIMIT_FPS);
@@ -58,6 +59,7 @@ fn main() {
     let mut game = Game {
         map: gamemap::make_map(&mut objects),
         messages: Messages::new(),
+        inventory: vec![],
     };
     game.messages.add("Welcome stranger!", RED);
 
@@ -118,7 +120,7 @@ fn render(tcod: &mut Tcod, game: &mut Game, objects: &[Object], fov_recompute: b
     blit(&mut tcod.gui, (0, 0), (SCREEN_WIDTH, PANEL_HEIGHT), &mut tcod.root, (0, PANEL_Y), 1.0, 1.0);
 }
 
-fn handle_keys(tcod: &mut Tcod, objects: &mut [Object], game: &mut Game) -> PlayerAction {
+fn handle_keys(tcod: &mut Tcod, objects: &mut Vec<Object>, game: &mut Game) -> PlayerAction {
     use tcod::input::KeyCode::*;
     match (tcod.key, tcod.key.text(), objects[PLAYER_ID].alive) {
         (Key { code: Up, .. }, _, true) => {
@@ -136,6 +138,14 @@ fn handle_keys(tcod: &mut Tcod, objects: &mut [Object], game: &mut Game) -> Play
         (Key { code: Right, .. }, _, true) => {
             player_move_or_attack(1, 0, game, objects);
             TookTurn
+        }
+
+        (Key { code: Text, .. }, "g", true) => {
+            let item_id = objects.iter().position(|o| o.position() == objects[PLAYER_ID].position() && o.item.is_some());
+            if let Some(item_id) = item_id {
+                pick_item_up(item_id, game, objects);
+            }
+            DidntTakeTurn
         }
 
         (Key { code: Enter, alt: true, .. }, _, _) => {

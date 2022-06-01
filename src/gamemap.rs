@@ -1,9 +1,11 @@
 use std::cmp;
 use rand::Rng;
 use tcod::{BackgroundFlag, Color, colors, Console, Map};
+use tcod::colors::VIOLET;
 use DeathCallback::Monster;
 use crate::{Game, PLAYER_ID};
 use crate::ai::Ai;
+use crate::inventory::Item;
 use crate::object::{DeathCallback, Fighter, Object};
 
 pub const MAP_WIDTH: i32 = 80;
@@ -20,6 +22,7 @@ const ROOM_MAX_SIZE: i32 = 10;
 const ROOM_MIN_SIZE: i32 = 6;
 const MAX_ROOMS: i32 = 30;
 const MAX_ROOM_MONSTERS: i32 = 3;
+const MAX_ROOM_ITEMS: i32 = 2;
 
 pub type GameMap = Vec<Vec<Tile>>;
 
@@ -108,6 +111,19 @@ fn place_objects(room: RectRoom, map: &GameMap, objects: &mut Vec<Object>) {
             };
             monster.alive = true;
             objects.push(monster)
+        }
+    }
+
+    let num_items = rand::thread_rng().gen_range(0..MAX_ROOM_ITEMS + 1);
+
+    for _ in 0..num_items {
+        let x = rand::thread_rng().gen_range(room.x1 + 1..room.x2);
+        let y = rand::thread_rng().gen_range(room.y1 + 1..room.y2);
+
+        if !is_blocked(x, y, map, objects) {
+            let mut object = Object::new(x, y, '!', "healing potion", VIOLET, false);
+            object.item = Some(Item::Heal);
+            objects.push(object);
         }
     }
 }
