@@ -8,6 +8,7 @@ pub mod gamemap;
 pub mod ai;
 pub mod gui;
 pub mod inventory;
+pub mod menu;
 
 pub const SCREEN_WIDTH: i32 = 80;
 pub const SCREEN_HEIGHT: i32 = 50;

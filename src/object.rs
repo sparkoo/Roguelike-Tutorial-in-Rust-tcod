@@ -123,6 +123,15 @@ impl Object {
             game.messages.add(format!("{} attacks {}, but it has no effect!", self.name, target.name), WHITE);
         }
     }
+
+    pub fn heal(&mut self, amount: i32) {
+        if let Some(ref mut fighter) = self.fighter {
+            fighter.hp += amount;
+            if fighter.hp > fighter.max_hp {
+                fighter.hp = fighter.max_hp;
+            }
+        }
+    }
 }
 
 pub fn move_by(id: usize, dx: i32, dy: i32, game: &Game, objects: &mut [Object]) {

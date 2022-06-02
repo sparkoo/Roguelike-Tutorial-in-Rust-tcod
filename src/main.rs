@@ -6,7 +6,8 @@ use roguelike::{Game, gamemap, PLAYER_ID, SCREEN_HEIGHT, SCREEN_WIDTH};
 use roguelike::ai::ai_take_turn;
 use roguelike::gamemap::{draw_map, MAP_HEIGHT, MAP_WIDTH};
 use roguelike::gui::{draw_gui, Messages, PANEL_HEIGHT, PANEL_Y};
-use roguelike::inventory::pick_item_up;
+use roguelike::inventory::{pick_item_up, use_item};
+use roguelike::menu::inventory_menu;
 use roguelike::object::{Fighter, Object, player_move_or_attack};
 use roguelike::object::DeathCallback::Player;
 use crate::PlayerAction::{DidntTakeTurn, Exit, TookTurn};
@@ -144,6 +145,14 @@ fn handle_keys(tcod: &mut Tcod, objects: &mut Vec<Object>, game: &mut Game) -> P
             let item_id = objects.iter().position(|o| o.position() == objects[PLAYER_ID].position() && o.item.is_some());
             if let Some(item_id) = item_id {
                 pick_item_up(item_id, game, objects);
+            }
+            DidntTakeTurn
+        }
+
+        (Key { code: Text, .. }, "i", true) => {
+            let inventory_index = inventory_menu(&game.inventory, "Press the key to an item to use it, or any other to cancel.\n", &mut tcod.root);
+            if let Some(inventory_index) = inventory_index {
+                use_item(inventory_index, game, objects);
             }
             DidntTakeTurn
         }
